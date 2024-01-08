@@ -7,7 +7,8 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * <P>Пример простого взаимодействия с реляционной базой данных через JDBC
+ * <P>Пример простого взаимодействия с реляционной базой данных через JDBC. Для упрощения материала в качестве СУБД
+ * взята SQLite в файловом режиме работы
  */
 public class JdbcApplication {
     /**
@@ -65,17 +66,17 @@ public class JdbcApplication {
 
     /**
      * Пример rollback
-     * <B>Следует обратить внимание:</B> при создании <code>SavePoint</code> автоматически будет выполнен setAutoCommit(false)
+     * <P><B>Следует обратить внимание:</B> при создании <code>SavePoint</code> автоматически будет выполнен setAutoCommit(false)
      *
      * @throws SQLException <code>SQLException</code> пробрасывается просто наверх (допустимо в учебном примере)
      */
     private static void rollback() throws SQLException {
         connection.setAutoCommit(true);
-        statement.executeUpdate("INSERT INTO students (name, score) VALUES ('Bob1', 10);");
+        statement.executeUpdate(String.format("insert into students (name, score, created_at) values ('%s', %d, '%s');", "Bob1", 10, LocalDateTime.now()));
         Savepoint savepoint = connection.setSavepoint();
-        statement.executeUpdate("INSERT INTO students (name, score) VALUES ('Bob2', 20);");
+        statement.executeUpdate(String.format("insert into students (name, score, created_at) values ('%s', %d, '%s');", "Bob2", 20, LocalDateTime.now()));
         connection.rollback(savepoint);
-        statement.executeUpdate("INSERT INTO students (name, score) VALUES ('Bob3', 30);");
+        statement.executeUpdate(String.format("insert into students (name, score, created_at) values ('%s', %d, '%s');", "Bob3", 30, LocalDateTime.now()));
         connection.commit();
     }
 
@@ -87,7 +88,7 @@ public class JdbcApplication {
      * @throws SQLException <code>SQLException</code> пробрасывается просто наверх (допустимо в учебном примере)
      */
     private static void batchExecutionDemoWithPreparedStatement() {
-        try (PreparedStatement localPreparedStatementInsert = connection.prepareStatement("INSERT INTO students (name, score, created_at) VALUES (?, ?, ?)")) {
+        try (PreparedStatement localPreparedStatementInsert = connection.prepareStatement("insert into students (name, score, created_at) VALUES (?, ?, ?)")) {
             connection.setAutoCommit(false);
             for (int i = 1; i <= 10000; i++) {
                 localPreparedStatementInsert.setString(1, "Bob" + i);
@@ -104,7 +105,7 @@ public class JdbcApplication {
 
     /**
      * Пример использования batch
-     * <B>Следует обратить внимание:</B> даже в таком случае требуется вручную управлять транзакцией, иначе
+     * <P><B>Следует обратить внимание:</B> даже в таком случае требуется вручную управлять транзакцией, иначе
      * запросы из пачки будут выполняться каждый в своей транзакции
      *
      * @throws SQLException <code>SQLException</code> пробрасывается просто наверх (допустимо в учебном примере)
@@ -113,7 +114,7 @@ public class JdbcApplication {
         try {
             connection.setAutoCommit(false);
             for (int i = 1; i <= 1000; i++) {
-                statement.addBatch(String.format("INSERT INTO students (name, score, created_at) VALUES ('%s', %d, '%s')", "Bob" + i, i * 10 % 100, LocalDateTime.now()));
+                statement.addBatch(String.format("insert into students (name, score, created_at) values ('%s', %d, '%s')", "Bob" + i, i * 10 % 100, LocalDateTime.now()));
                 statement.cancel();
             }
             int[] result = statement.executeBatch();
@@ -146,7 +147,7 @@ public class JdbcApplication {
      * @throws SQLException <code>SQLException</code> пробрасывается просто наверх (допустимо в учебном примере)
      */
     public static void prepareStatements() throws SQLException {
-        psInsert = connection.prepareStatement("INSERT INTO students (name, score, created_at) VALUES (?, ?, ?);");
+        psInsert = connection.prepareStatement("insert into students (name, score, created_at) values (?, ?, ?);");
     }
 
     /**
@@ -179,7 +180,7 @@ public class JdbcApplication {
 
     /**
      * Пример заполнения таблицы students через <code>Statement</code> в рамках одной транзакции
-     * <B>Следует обратить внимание:</B> для подобных действий гораздо лучше подходит PreparedStatement
+     * <P><B>Следует обратить внимание:</B> для подобных действий гораздо лучше подходит PreparedStatement
      *
      * @param count количество добавляемых студентов
      * @throws SQLException <code>SQLException</code> пробрасывается просто наверх (допустимо в учебном примере)
