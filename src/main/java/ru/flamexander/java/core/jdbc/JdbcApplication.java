@@ -274,7 +274,7 @@ public class JdbcApplication {
      * @throws SQLException <code>SQLException</code> пробрасывается просто наверх (допустимо в учебном примере)
      */
     private static void updateOperationChangeStudentScoreByName(String name, int score) throws SQLException {
-        int affectedRowsCount = statement.executeUpdate(String.format("update students set score = %d where name = '%s';", name));
+        int affectedRowsCount = statement.executeUpdate(String.format("update students set score = %d where name = '%s';", score, name));
         System.out.printf("Балл студента %s стал равен %d (изменено строк: %d)\n", name, score, affectedRowsCount);
     }
 
