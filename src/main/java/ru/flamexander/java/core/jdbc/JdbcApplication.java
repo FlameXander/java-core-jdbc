@@ -115,7 +115,7 @@ public class JdbcApplication {
             connection.setAutoCommit(false);
             for (int i = 1; i <= 1000; i++) {
                 statement.addBatch(String.format("insert into students (name, score, created_at) values ('%s', %d, '%s')", "Bob" + i, i * 10 % 100, LocalDateTime.now()));
-                statement.cancel();
+                // statement.cancel();
             }
             int[] result = statement.executeBatch();
             connection.setAutoCommit(true);
@@ -135,6 +135,7 @@ public class JdbcApplication {
         for (int i = 1; i <= 10000; i++) {
             psInsert.setString(1, "Bob" + i);
             psInsert.setInt(2, i * 10 % 100);
+            psInsert.setObject(3, LocalDateTime.now());
             psInsert.executeUpdate();
         }
         connection.setAutoCommit(true);
@@ -234,7 +235,7 @@ public class JdbcApplication {
         try (ResultSet rs = statement.executeQuery("select * from students;")) {
             List<Student> out = new ArrayList<>();
             while (rs.next()) {
-                out.add(new Student(rs.getLong(1), rs.getString("name"), rs.getInt(3)));
+                out.add(new Student(rs.getLong(1), rs.getString("name"), rs.getInt(3), rs.getTimestamp(4).toLocalDateTime()));
             }
             return Collections.unmodifiableList(out);
         }
@@ -246,7 +247,8 @@ public class JdbcApplication {
      * @throws SQLException <code>SQLException</code> пробрасывается просто наверх (допустимо в учебном примере)
      */
     private static void clearTable() throws SQLException {
-        statement.executeUpdate("delete from students;");
+        int affectedRowsCount = statement.executeUpdate("delete from students;");
+        System.out.printf("Удалено строк: %d\n", affectedRowsCount);
     }
 
     /**
